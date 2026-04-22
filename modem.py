@@ -1,0 +1,52 @@
+# Max Janisse - 2026
+import scipy.io.wavfile as wav
+import numpy as np
+import argparse
+
+def tone_power(samples, N, f, fs):
+    I = 0
+    Q = 0
+    length = len(samples)
+    for n in range(length):
+        angle = (2*np.pi) * f * (n / fs)
+        I += (samples[n] * np.cos(angle))
+        Q += (samples[n] * np.sin(angle))
+    return I**2 + Q**2
+
+def read_wav_file(filename):
+    try:
+        rate, data = wav.read(filename)
+        if type(data[0]) is np.ndarray:
+            raise ValueError(f"Multiple ({len(data[0])}) audio tracks detected. Only mono tracks are supported.")
+        return rate, data
+    except ValueError as e:
+            print(f"*** failed to read file: {e}")
+            exit(0)
+
+def convert_wav_to_bin(rate, data, chunk_size):
+    binary_data = []
+    for i in range(0, len(data), chunk_size):
+        chunk = data[i:i+chunk_size]
+        space = tone_power(chunk, chunk_size, 2025, rate)
+        mark = tone_power(chunk, chunk_size, 2225, rate)
+        binary_data.append(0 if space > mark else 1)
+    return binary_data
+
+def main(args):
+    rate, data = read_wav_file(args.filename)
+    binary_data = convert_wav_to_bin(rate, data, args.block_size)
+
+    message = ""
+    for j in range(0, len(binary_data), 10):
+        bits = binary_data[j+1:j+9]
+        bits.reverse()
+        binary_str = ''.join(list(map(str, bits)))
+        message += chr(int(binary_str, 2))
+    print(message)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="")
+    parser.add_argument("filename", help="Name of WAV file to read")
+    parser.add_argument("-b", "--block-size", default=160, help="")
+    args = parser.parse_args()
+    main(args)
