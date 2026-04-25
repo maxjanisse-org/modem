@@ -3,6 +3,8 @@ import scipy.io.wavfile as wav
 import numpy as np
 import argparse
 
+VERBOSE = False
+
 def tone_power(samples, f, fs):
     I = 0
     Q = 0
@@ -31,11 +33,13 @@ def convert_wav_to_bin(rate, data, chunk_size):
         space = tone_power(chunk, 2025, rate)
         bit = 0 if space > mark else 1
         binary_data.append(bit)
-        print(f"Space: {space}, Mark: {mark} = {bit}")
+        if VERBOSE:
+            print(f"Space: {space}, Mark: {mark} = {bit}")
     return binary_data
 
 def main(args):
     rate, data = read_wav_file(args.filename)
+
     binary_data = convert_wav_to_bin(rate, data, args.block_size)
 
     message = ""
@@ -49,6 +53,8 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="")
     parser.add_argument("filename", help="Name of WAV file to read")
-    parser.add_argument("-b", "--block-size", default=160, help="")
+    parser.add_argument("-b", "--block-size", default=160, help="Set the size of ")
+    parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args()
+    VERBOSE = args.verbose
     main(args)
