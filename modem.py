@@ -3,12 +3,12 @@ import scipy.io.wavfile as wav
 import numpy as np
 import argparse
 
-def tone_power(samples, N, f, fs):
+def tone_power(samples, f, fs):
     I = 0
     Q = 0
-    length = len(samples)
+    length = len(samples) - 1
     for n in range(length):
-        angle = (2*np.pi) * f * (n / fs)
+        angle = 2. * np.pi * f * (n / fs)
         I += (samples[n] * np.cos(angle))
         Q += (samples[n] * np.sin(angle))
     return I**2 + Q**2
@@ -21,15 +21,17 @@ def read_wav_file(filename):
         return rate, data
     except ValueError as e:
             print(f"*** failed to read file: {e}")
-            exit(0)
+            exit(1)
 
 def convert_wav_to_bin(rate, data, chunk_size):
     binary_data = []
     for i in range(0, len(data), chunk_size):
         chunk = data[i:i+chunk_size]
-        space = tone_power(chunk, chunk_size, 2025, rate)
-        mark = tone_power(chunk, chunk_size, 2225, rate)
-        binary_data.append(0 if space > mark else 1)
+        mark = tone_power(chunk, 2225, rate)
+        space = tone_power(chunk, 2025, rate)
+        bit = 0 if space > mark else 1
+        binary_data.append(bit)
+        print(f"Space: {space}, Mark: {mark} = {bit}")
     return binary_data
 
 def main(args):
