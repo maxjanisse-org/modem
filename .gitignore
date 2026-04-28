@@ -1,6 +1,7 @@
 # Mine
 *.wav
 test*.txt
+song.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
